@@ -247,4 +247,30 @@ function M.fuzzy_history()
   end)
 end
 
+function M.list_vars()
+  local items = {}
+  for k, v in pairs(sandbox) do
+    if not reserved_symbols[k] then
+      table.insert(items, k .. ' = ' .. tostring(v))
+    end
+  end
+  table.sort(items)
+  vim.ui.select(items, { prompt = 'Calculator Variables' }, function(item)
+    if not item then return end
+    M.open()
+    local buf = vim.api.nvim_get_current_buf()
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, { item })
+    vim.api.nvim_win_set_cursor(0, {1, #item})
+    vim.api.nvim_buf_set_option(buf, 'modified', true)
+  end)
+end
+
+function M.clear_vars()
+  for k in pairs(sandbox) do
+    if not reserved_symbols[k] then
+      sandbox[k] = nil
+    end
+  end
+end
+
 return M
