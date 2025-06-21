@@ -7,7 +7,7 @@ local ns = vim.api.nvim_create_namespace('calculator')
 
 M.history       = {}
 M.history_index = 0
-
+M.last_result   = nil
 
 local function load_history()
   if vim.fn.filereadable(persist_path) == 1 then
@@ -78,6 +78,7 @@ local function eval_live(buf)
       virt_text_pos = 'eol',
     })
   else
+    M.last_result = result
     vim.api.nvim_buf_set_extmark(buf, ns, 0, 0, {
       virt_text     = {{'= ' .. tostring(result), 'Comment'}},
       virt_text_pos = 'eol',
@@ -124,6 +125,7 @@ local function eval_commit(buf, win)
   else
     -- show result only for expressions
     if not is_assign then
+      M.last_result = result
       vim.api.nvim_buf_set_extmark(buf, ns, 0, 0, {
         virt_text     = {{'= ' .. tostring(result), 'Comment'}},
         virt_text_pos = 'eol',
@@ -202,6 +204,15 @@ function M.open()
   end
   vim.keymap.set({'i','n'}, '<C-c>', close, {buffer = buf, nowait = true})
   vim.keymap.set('n', 'q',           close, {buffer = buf, noremap = true})
+
+  vim.keymap.set({'i','n'}, '<C-y>', function()
+    if M.last_result == nil then
+      vim.api.nvim_echo({{'No result to yank', 'ErrorMsg'}}, false, {})
+    else
+      vim.fn.setreg('"', tostring(M.last_result))
+      vim.api.nvim_echo({{'Yanked: ' .. tostring(M.last_result), 'None'}}, false, {})
+    end
+  end, {buffer = buf, noremap = true})
 end
 
 return M
