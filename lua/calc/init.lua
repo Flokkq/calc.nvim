@@ -1,0 +1,121 @@
+local M = {}
+
+local ns = vim.api.nvim_create_namespace('calculator')
+
+M.history       = {}
+M.history_index = 0
+
+local sandbox = {}
+setmetatable(sandbox, {
+  __index = function(_, k)
+    if math[k] then return math[k] end
+    if k == 'random' then return math.random end
+    return nil
+  end,
+})
+sandbox.math   = math
+sandbox.random = math.random
+
+local function eval_live(buf)
+  vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
+  local expr = vim.api.nvim_buf_get_lines(buf, 0, 1, false)[1] or ''
+  if expr == '' then return end
+
+  local fn, err = load('return ' .. expr, 'calculator', 't', sandbox)
+  if not fn then
+    vim.api.nvim_buf_set_extmark(buf, ns, 0, 0, {
+      virt_text     = {{' Error: ' .. err, 'ErrorMsg'}},
+      virt_text_pos = 'eol',
+    })
+    return
+  end
+
+  local ok, result = pcall(fn)
+  if not ok then
+    vim.api.nvim_buf_set_extmark(buf, ns, 0, 0, {
+      virt_text     = {{' Error: ' .. result, 'ErrorMsg'}},
+      virt_text_pos = 'eol',
+    })
+  else
+    vim.api.nvim_buf_set_extmark(buf, ns, 0, 0, {
+      virt_text     = {{'= ' .. tostring(result), 'Comment'}},
+      virt_text_pos = 'eol',
+    })
+  end
+end
+
+local function eval_commit(buf, win)
+  local expr = vim.api.nvim_buf_get_lines(buf, 0, 1, false)[1] or ''
+  if expr == '' then return end
+
+  eval_live(buf)
+
+  table.insert(M.history, expr)
+  M.history_index = #M.history + 1
+
+  vim.schedule(function()
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, {''})
+    vim.api.nvim_buf_set_option(buf, 'modified', false)
+    vim.api.nvim_win_set_cursor(win, {1, 0})
+  end)
+end
+
+local function show_history(buf, step)
+  if #M.history == 0 then return end
+  M.history_index = M.history_index + step
+  if M.history_index < 1 then
+    M.history_index = #M.history
+  elseif M.history_index > #M.history then
+    M.history_index = 1
+  end
+  local entry = M.history[M.history_index]
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, {entry})
+  vim.api.nvim_win_set_cursor(0, {1, #entry})
+  vim.api.nvim_buf_set_option(buf, 'modified', true)
+end
+
+function M.open()
+  local buf = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_option(buf, 'buftype',   'nofile')
+  vim.api.nvim_buf_set_option(buf, 'bufhidden', 'wipe')
+  vim.api.nvim_buf_set_option(buf, 'swapfile',  false)
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, {''})
+
+  local width = math.floor(vim.o.columns * 0.5)
+  local win = vim.api.nvim_open_win(buf, true, {
+    relative = 'editor',
+    style    = 'minimal',
+    border   = 'rounded',
+    width    = width,
+    height   = 1,
+    row      = math.floor((vim.o.lines - 1) / 2),
+    col      = math.floor((vim.o.columns - width) / 2),
+  })
+  vim.api.nvim_win_set_option(win, 'winfixheight', true)
+  vim.cmd('startinsert')
+
+  vim.api.nvim_buf_attach(buf, false, {
+    on_lines = function()
+      eval_live(buf)
+    end,
+  })
+
+  vim.keymap.set('i', '<CR>', function()
+    eval_commit(buf, win)
+  end, {buffer = buf, noremap = true})
+
+  vim.keymap.set('n', '<Tab>',   function() show_history(buf,  1) end,
+    {buffer = buf, noremap = true})
+  vim.keymap.set('n', '<S-Tab>', function() show_history(buf, -1) end,
+    {buffer = buf, noremap = true})
+
+  local function close()
+    if vim.api.nvim_win_is_valid(win) then
+      vim.api.nvim_win_close(win, true)
+    end
+  end
+  vim.keymap.set({'i','n'}, '<C-c>', close, {buffer = buf, nowait = true})
+  vim.keymap.set('n', 'q',           close, {buffer = buf, noremap = true})
+end
+
+return M
