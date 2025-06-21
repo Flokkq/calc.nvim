@@ -1,6 +1,23 @@
 # Changelog
 
 
+## [0.2.0](https://github.com/Flokkq/https://github.com/orhun/git-cliff/blob/main/cliff.toml/compare/v0.1.0..v0.2.0) - 2025-06-21
+
+
+
+
+### 🚀 Features
+
+- *(history)* Save variables over nvim session - ([539a954](https://github.com/Flokkq/https://github.com/orhun/git-cliff/blob/main/cliff.toml/commit/539a9542b3f7fb47b46b26ff287468806210e83c))
+- *(calc)* Add keybind to yank last result - ([9485708](https://github.com/Flokkq/https://github.com/orhun/git-cliff/blob/main/cliff.toml/commit/94857080f7b4913ea013e18453aa3768dcc00641))
+- *(calc)* Save variables to history - ([c23bfef](https://github.com/Flokkq/https://github.com/orhun/git-cliff/blob/main/cliff.toml/commit/c23bfef4f72c86b3eed9eac86ca06ae90d3e0ef1))
+- *(calc)* Persist history over nvim sessions - ([719f4af](https://github.com/Flokkq/https://github.com/orhun/git-cliff/blob/main/cliff.toml/commit/719f4afa015b4e2d2cc321e59a778e1202ad69c5))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(repo)* Keybinds - ([5edf91c](https://github.com/Flokkq/https://github.com/orhun/git-cliff/blob/main/cliff.toml/commit/5edf91cd7071076c26cb68e63f68c4018daf91fa))
+
+
 ## [0.1.0] - 2025-06-21
 
 

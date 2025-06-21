@@ -25,7 +25,7 @@ Add the following configuration to use `calc.nvim`.
 ```lua
 {
   "flokkq/calc.nvim",
-  version = "v0.1.0",
+  version = "v0.2.0",
 }
 ```
 
@@ -34,7 +34,7 @@ Add the following configuration to use `calc.nvim`.
 ```lua
 use {
   "flokkq/calc.nvim",
-  tag = "v0.1.0",
+  tag = "v0.2.0",
 }
 ```
 
