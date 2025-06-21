@@ -236,4 +236,15 @@ function M.open()
   end, {buffer = buf, noremap = true})
 end
 
+function M.fuzzy_history()
+  vim.ui.select(M.history, { prompt = 'Calculator History' }, function(item)
+    if not item then return end
+    M.open()
+    local buf = vim.api.nvim_get_current_buf()
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, { item })
+    vim.api.nvim_win_set_cursor(0, { 1, #item })
+    vim.api.nvim_buf_set_option(buf, 'modified', true)
+  end)
+end
+
 return M
