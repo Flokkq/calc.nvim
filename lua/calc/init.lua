@@ -21,12 +21,26 @@ local function load_history()
 end
 load_history()
 
+local reserved_symbols = {}
+for k in pairs(math) do
+  reserved_symbols[k] = true
+end
+reserved_symbols.random = true
+reserved_symbols.math   = true
+
 local sandbox = {}
 setmetatable(sandbox, {
   __index = function(_, k)
-    if math[k] then return math[k] end
-    if k == 'random' then return math.random end
-    return nil
+    if math[k] then
+      return math[k]
+    end
+    if k == 'random' then
+      return math.random
+    end
+    return rawget(sandbox, k)
+  end,
+  __newindex = function(_, k, v)
+    rawset(sandbox, k, v)
   end,
 })
 sandbox.math   = math
@@ -43,6 +57,10 @@ local function eval_live(buf)
   vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
   local expr = vim.api.nvim_buf_get_lines(buf, 0, 1, false)[1] or ''
   if expr == '' then return end
+
+  if expr:match('^%s*[%a_][%w_]*%s*=') then
+    return
+  end
 
   local fn, err = load('return ' .. expr, 'calculator', 't', sandbox)
   if not fn then
@@ -71,19 +89,61 @@ local function eval_commit(buf, win)
   local expr = vim.api.nvim_buf_get_lines(buf, 0, 1, false)[1] or ''
   if expr == '' then return end
 
-  eval_live(buf)
-
-  table.insert(M.history, expr)
-  if #M.history > MAX_HISTORY then
-    table.remove(M.history, 1)
+  local var_name = expr:match('^%s*([%a_][%w_]*)%s*=')
+  if var_name and reserved_symbols[var_name] then
+    vim.api.nvim_buf_set_extmark(buf, ns, 0, 0, {
+      virt_text     = {{' Error: cannot override reserved symbol "'..var_name..'"', 'ErrorMsg'}},
+      virt_text_pos = 'eol',
+    })
+    return
   end
-  M.history_index = #M.history + 1
 
-  vim.schedule(function()
-    vim.api.nvim_buf_set_lines(buf, 0, -1, false, {''})
-    vim.api.nvim_buf_set_option(buf, 'modified', false)
-    vim.api.nvim_win_set_cursor(win, {1, 0})
-  end)
+  local is_assign = var_name ~= nil
+
+  local chunk, err
+  if is_assign then
+    chunk, err = load(expr, 'calculator', 't', sandbox)
+  else
+    chunk, err = load('return ' .. expr, 'calculator', 't', sandbox)
+  end
+
+  if not chunk then
+    vim.api.nvim_buf_set_extmark(buf, ns, 0, 0, {
+      virt_text     = {{' Error: ' .. err, 'ErrorMsg'}},
+      virt_text_pos = 'eol',
+    })
+    return
+  end
+
+  local ok, result = pcall(chunk)
+  if not ok then
+    vim.api.nvim_buf_set_extmark(buf, ns, 0, 0, {
+      virt_text     = {{' Error: ' .. result, 'ErrorMsg'}},
+      virt_text_pos = 'eol',
+    })
+  else
+    -- show result only for expressions
+    if not is_assign then
+      vim.api.nvim_buf_set_extmark(buf, ns, 0, 0, {
+        virt_text     = {{'= ' .. tostring(result), 'Comment'}},
+        virt_text_pos = 'eol',
+      })
+    end
+
+    -- append to history, cap at MAX_HISTORY
+    table.insert(M.history, expr)
+    if #M.history > MAX_HISTORY then
+      table.remove(M.history, 1)
+    end
+    M.history_index = #M.history + 1
+
+    -- clear buffer after everything is applied
+    vim.schedule(function()
+      vim.api.nvim_buf_set_lines(buf, 0, -1, false, {''})
+      vim.api.nvim_buf_set_option(buf, 'modified', false)
+      vim.api.nvim_win_set_cursor(win, {1, 0})
+    end)
+  end
 end
 
 local function show_history(buf, step)
