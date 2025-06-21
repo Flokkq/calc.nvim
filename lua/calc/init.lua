@@ -1,9 +1,25 @@
 local M = {}
 
+local MAX_HISTORY = 1000
+local persist_path = vim.fn.stdpath('data') .. '/calc_history.json'
+
 local ns = vim.api.nvim_create_namespace('calculator')
 
 M.history       = {}
 M.history_index = 0
+
+
+local function load_history()
+  if vim.fn.filereadable(persist_path) == 1 then
+    local lines = vim.fn.readfile(persist_path)
+    local ok, tbl = pcall(vim.fn.json_decode, lines[1])
+    if ok and type(tbl) == 'table' then
+      M.history = tbl
+      M.history_index = #tbl + 1
+    end
+  end
+end
+load_history()
 
 local sandbox = {}
 setmetatable(sandbox, {
@@ -15,6 +31,13 @@ setmetatable(sandbox, {
 })
 sandbox.math   = math
 sandbox.random = math.random
+
+local function save_history()
+  local json = vim.fn.json_encode(M.history)
+  vim.fn.writefile({json}, persist_path)
+end
+
+vim.api.nvim_create_autocmd('VimLeavePre', { callback = save_history })
 
 local function eval_live(buf)
   vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
@@ -51,6 +74,9 @@ local function eval_commit(buf, win)
   eval_live(buf)
 
   table.insert(M.history, expr)
+  if #M.history > MAX_HISTORY then
+    table.remove(M.history, 1)
+  end
   M.history_index = #M.history + 1
 
   vim.schedule(function()
