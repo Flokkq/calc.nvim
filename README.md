@@ -18,6 +18,9 @@ Use these key binds to during your calculations.
 | `<C-y>`     | Yank the last evaluated result into the unnamed register (`"`) |
 
 
+> [!NOTE]
+> Access the last result with `ans`
+
 Add the following configuration to use `calc.nvim`.
 
 ### Installation using [Lazy.nvim](https://github.com/folke/lazy.nvim)
