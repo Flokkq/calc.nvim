@@ -28,6 +28,7 @@ for k in pairs(math) do
 end
 reserved_symbols.random = true
 reserved_symbols.math   = true
+reserved_symbols.ans   = true
 
 local sandbox = {}
 setmetatable(sandbox, {
@@ -46,6 +47,7 @@ setmetatable(sandbox, {
 })
 sandbox.math   = math
 sandbox.random = math.random
+sandbox.ans = 0
 
 local function load_vars()
   if vim.fn.filereadable(var_persist_path) == 1 then
@@ -103,7 +105,6 @@ local function eval_live(buf)
       virt_text_pos = 'eol',
     })
   else
-    M.last_result = result
     vim.api.nvim_buf_set_extmark(buf, ns, 0, 0, {
       virt_text     = {{'= ' .. tostring(result), 'Comment'}},
       virt_text_pos = 'eol',
@@ -150,6 +151,7 @@ local function eval_commit(buf, win)
   else
     if not is_assign then
       M.last_result = result
+      sandbox.ans = result
       vim.api.nvim_buf_set_extmark(buf, ns, 0, 0, {
         virt_text     = {{'= ' .. tostring(result), 'Comment'}},
         virt_text_pos = 'eol',
