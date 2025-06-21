@@ -185,6 +185,7 @@ end
 
 function M.open()
   local buf = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_option(buf, 'filetype', 'lua')
   vim.api.nvim_buf_set_option(buf, 'buftype',   'nofile')
   vim.api.nvim_buf_set_option(buf, 'bufhidden', 'wipe')
   vim.api.nvim_buf_set_option(buf, 'swapfile',  false)
