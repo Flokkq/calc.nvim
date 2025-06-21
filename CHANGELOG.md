@@ -1,6 +1,23 @@
 # Changelog
 
 
+## [0.3.0](https://github.com/Flokkq/https://github.com/orhun/git-cliff/blob/main/cliff.toml/compare/v0.2.0..v0.3.0) - 2025-06-21
+
+
+
+
+### 🚀 Features
+
+- *(calc)* Expose last answer as ans - ([1659c91](https://github.com/Flokkq/https://github.com/orhun/git-cliff/blob/main/cliff.toml/commit/1659c91ae6b25b6601c31ceb5110e7ee00fcc9b0))
+- *(calc)* Add syntax highlighting - ([322db76](https://github.com/Flokkq/https://github.com/orhun/git-cliff/blob/main/cliff.toml/commit/322db766cbe667d5103412afa134201b14c2c5a5))
+- *(history)* Add command to only list vars and clear vars - ([cb91904](https://github.com/Flokkq/https://github.com/orhun/git-cliff/blob/main/cliff.toml/commit/cb919044295785b86501af6ffed6a080a1b046df))
+- *(history)* Add history fuzzy search - ([2d3280a](https://github.com/Flokkq/https://github.com/orhun/git-cliff/blob/main/cliff.toml/commit/2d3280aa4d1265fcb85499c31c8403335d6b591e))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(repo)* Update readme - ([2891af4](https://github.com/Flokkq/https://github.com/orhun/git-cliff/blob/main/cliff.toml/commit/2891af4cee79f66ee9f8bf698f284d04f80ef90d))
+
+
 ## [0.2.0](https://github.com/Flokkq/https://github.com/orhun/git-cliff/blob/main/cliff.toml/compare/v0.1.0..v0.2.0) - 2025-06-21
 
 
