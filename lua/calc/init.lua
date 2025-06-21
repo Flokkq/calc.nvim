@@ -2,6 +2,7 @@ local M = {}
 
 local MAX_HISTORY = 1000
 local persist_path = vim.fn.stdpath('data') .. '/calc_history.json'
+local var_persist_path = vim.fn.stdpath('data') .. '/calc_vars.json'
 
 local ns = vim.api.nvim_create_namespace('calculator')
 
@@ -46,12 +47,36 @@ setmetatable(sandbox, {
 sandbox.math   = math
 sandbox.random = math.random
 
+local function load_vars()
+  if vim.fn.filereadable(var_persist_path) == 1 then
+    local lines = vim.fn.readfile(var_persist_path)
+    local ok, tbl = pcall(vim.fn.json_decode, lines[1])
+    if ok and type(tbl) == 'table' then
+      for k, v in pairs(tbl) do
+        sandbox[k] = v
+      end
+    end
+  end
+end
+load_vars()
+
 local function save_history()
   local json = vim.fn.json_encode(M.history)
   vim.fn.writefile({json}, persist_path)
 end
 
+local function save_vars()
+  local tbl = {}
+  for k, v in pairs(sandbox) do
+    if not reserved_symbols[k] then
+      tbl[k] = v
+    end
+  end
+  vim.fn.writefile({vim.fn.json_encode(tbl)}, var_persist_path)
+end
+
 vim.api.nvim_create_autocmd('VimLeavePre', { callback = save_history })
+vim.api.nvim_create_autocmd('VimLeavePre', { callback = save_vars })
 
 local function eval_live(buf)
   vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
@@ -123,7 +148,6 @@ local function eval_commit(buf, win)
       virt_text_pos = 'eol',
     })
   else
-    -- show result only for expressions
     if not is_assign then
       M.last_result = result
       vim.api.nvim_buf_set_extmark(buf, ns, 0, 0, {
@@ -132,14 +156,12 @@ local function eval_commit(buf, win)
       })
     end
 
-    -- append to history, cap at MAX_HISTORY
     table.insert(M.history, expr)
     if #M.history > MAX_HISTORY then
       table.remove(M.history, 1)
     end
     M.history_index = #M.history + 1
 
-    -- clear buffer after everything is applied
     vim.schedule(function()
       vim.api.nvim_buf_set_lines(buf, 0, -1, false, {''})
       vim.api.nvim_buf_set_option(buf, 'modified', false)
@@ -156,9 +178,8 @@ local function show_history(buf, step)
   elseif M.history_index > #M.history then
     M.history_index = 1
   end
-  local entry = M.history[M.history_index]
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, {entry})
-  vim.api.nvim_win_set_cursor(0, {1, #entry})
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, { M.history[M.history_index] })
+  vim.api.nvim_win_set_cursor(0, {1, #M.history[M.history_index]})
   vim.api.nvim_buf_set_option(buf, 'modified', true)
 end
 
