@@ -2,10 +2,34 @@
 
 A minimalist neovim plugin for calculating stuff. You can start editing with `:CalcOpen`.
 
+---
+
+<details>
+    <summary>Click to expand screenshots</summary>
+    <p align="center">
+          <img src="./.screenshots/commandline.png"
+               alt="Preview window"
+               width="1500">
+    </p>
+    <p align="center">
+          <img src="./.screenshots/variables.png"
+               alt="Preview window"
+               width="1500">
+    </p>
+    <p align="center">
+          <img src="./.screenshots/history.png"
+               alt="Preview window"
+               width="1500">
+    </p>
+
+</details>
+
 ## Setup
 
 Use these key binds to during your calculations.
 
+> [!NOTE]
+> Access the last result with `ans`
 
 | Key         | Description                                                    |
 | ----------- | -------------------------------------------------------------- |
@@ -17,9 +41,6 @@ Use these key binds to during your calculations.
 | `q`         | Close the calculator (in Normal mode)                          |
 | `<C-y>`     | Yank the last evaluated result into the unnamed register (`"`) |
 
-
-> [!NOTE]
-> Access the last result with `ans`
 
 Add the following configuration to use `calc.nvim`.
 
